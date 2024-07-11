@@ -53,6 +53,15 @@ namespace StudentsCRUDWebService
         [WebMethod]
         public void AddStudent(string firstName, string lastName, DateTime dateOfBirth, string email)
         {
+            if (string.IsNullOrWhiteSpace(firstName))
+                throw new ArgumentException("El nombre no puede estar vacío.", nameof(firstName));
+            if (string.IsNullOrWhiteSpace(lastName))
+                throw new ArgumentException("El apellido no puede estar vacío.", nameof(lastName));
+            if (dateOfBirth == default)
+                throw new ArgumentException("La fecha de nacimiento no puede estar vacía.", nameof(dateOfBirth));
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("El correo electrónico no puede estar vacío.", nameof(email));
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 SqlCommand cmd = new SqlCommand("INSERT INTO Students (FirstName, LastName, DateOfBirth, Email) VALUES (@FirstName, @LastName, @DateOfBirth, @Email)", conn);
@@ -68,6 +77,17 @@ namespace StudentsCRUDWebService
         [WebMethod]
         public void UpdateStudent(int id, string firstName, string lastName, DateTime dateOfBirth, string email)
         {
+            if (id <= 0)
+                throw new ArgumentException("El ID debe ser un número positivo.", nameof(id));
+            if (string.IsNullOrWhiteSpace(firstName))
+                throw new ArgumentException("El nombre no puede estar vacío.", nameof(firstName));
+            if (string.IsNullOrWhiteSpace(lastName))
+                throw new ArgumentException("El apellido no puede estar vacío.", nameof(lastName));
+            if (dateOfBirth == default)
+                throw new ArgumentException("La fecha de nacimiento no puede estar vacía.", nameof(dateOfBirth));
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("El correo electrónico no puede estar vacío.", nameof(email));
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 SqlCommand cmd = new SqlCommand("UPDATE Students SET FirstName = @FirstName, LastName = @LastName, DateOfBirth = @DateOfBirth, Email = @Email WHERE Id = @Id", conn);
@@ -84,6 +104,9 @@ namespace StudentsCRUDWebService
         [WebMethod]
         public void DeleteStudent(int id)
         {
+            if (id <= 0)
+                throw new ArgumentException("El ID debe ser un número positivo.", nameof(id));
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 SqlCommand cmd = new SqlCommand("DELETE FROM Students WHERE Id = @Id", conn);
