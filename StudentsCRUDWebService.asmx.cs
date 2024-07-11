@@ -1,26 +1,96 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+using System.Data;
+using System.Data.SqlClient;
 using System.Web.Services;
+using System.Configuration;
 
 namespace StudentsCRUDWebService
 {
-    /// <summary>
-    /// Descripción breve de StudentsCRUDWebService
-    /// </summary>
     [WebService(Namespace = "http://tempuri.org/")]
     [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
     [System.ComponentModel.ToolboxItem(false)]
-    // Para permitir que se llame a este servicio web desde un script, usando ASP.NET AJAX, quite la marca de comentario de la línea siguiente. 
-    // [System.Web.Script.Services.ScriptService]
-    public class StudentsCRUDWebService : System.Web.Services.WebService
+    public class StudentsCRUDWebService : WebService
     {
+        private string connectionString = ConfigurationManager.ConnectionStrings["StudentDB"].ConnectionString;
+
+        public StudentsCRUDWebService()
+        {
+            CreateDatabaseIfNotExists();
+        }
+
+        private void CreateDatabaseIfNotExists()
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("IF DB_ID('StudentDB') IS NULL CREATE DATABASE StudentDB;", conn);
+                cmd.ExecuteNonQuery();
+                cmd.CommandText = @"
+                    IF OBJECT_ID('dbo.Students', 'U') IS NULL
+                    CREATE TABLE Students (
+                        Id INT PRIMARY KEY IDENTITY,
+                        FirstName NVARCHAR(50),
+                        LastName NVARCHAR(50),
+                        DateOfBirth DATE,
+                        Email NVARCHAR(100)
+                    );";
+                cmd.ExecuteNonQuery();
+            }
+        }
 
         [WebMethod]
-        public string HelloWorld()
+        public DataSet GetAllStudents()
         {
-            return "Hello World";
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Students", conn);
+                DataSet ds = new DataSet();
+                da.Fill(ds);
+                return ds;
+            }
+        }
+
+        [WebMethod]
+        public void AddStudent(string firstName, string lastName, DateTime dateOfBirth, string email)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                SqlCommand cmd = new SqlCommand("INSERT INTO Students (FirstName, LastName, DateOfBirth, Email) VALUES (@FirstName, @LastName, @DateOfBirth, @Email)", conn);
+                cmd.Parameters.AddWithValue("@FirstName", firstName);
+                cmd.Parameters.AddWithValue("@LastName", lastName);
+                cmd.Parameters.AddWithValue("@DateOfBirth", dateOfBirth);
+                cmd.Parameters.AddWithValue("@Email", email);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        [WebMethod]
+        public void UpdateStudent(int id, string firstName, string lastName, DateTime dateOfBirth, string email)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                SqlCommand cmd = new SqlCommand("UPDATE Students SET FirstName = @FirstName, LastName = @LastName, DateOfBirth = @DateOfBirth, Email = @Email WHERE Id = @Id", conn);
+                cmd.Parameters.AddWithValue("@Id", id);
+                cmd.Parameters.AddWithValue("@FirstName", firstName);
+                cmd.Parameters.AddWithValue("@LastName", lastName);
+                cmd.Parameters.AddWithValue("@DateOfBirth", dateOfBirth);
+                cmd.Parameters.AddWithValue("@Email", email);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        [WebMethod]
+        public void DeleteStudent(int id)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                SqlCommand cmd = new SqlCommand("DELETE FROM Students WHERE Id = @Id", conn);
+                cmd.Parameters.AddWithValue("@Id", id);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
         }
     }
 }
