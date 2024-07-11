@@ -11,11 +11,23 @@ namespace StudentsCRUDWebService
     [System.ComponentModel.ToolboxItem(false)]
     public class StudentsCRUDWebService : WebService
     {
-        private string connectionString = ConfigurationManager.ConnectionStrings["StudentDB"].ConnectionString;
+        private readonly string connectionString;
 
         public StudentsCRUDWebService()
         {
-            CreateDatabaseIfNotExists();
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["StudentDB"].ConnectionString;
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new ConfigurationErrorsException("La cadena de conexión 'StudentDB' no está configurada correctamente.");
+                }
+                CreateDatabaseIfNotExists();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al inicializar el servicio web: " + ex.Message);
+            }
         }
 
         private void CreateDatabaseIfNotExists()
